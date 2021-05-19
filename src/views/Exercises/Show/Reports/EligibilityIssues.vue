@@ -113,7 +113,7 @@ export default {
       refreshingReport: false,
       unsubscribe: null,
       tableColumns: [
-        { title: 'Candidate', sort: 'personalDetails.fullName', default: true },
+        { title: 'Candidate', sort: 'candidate.fullName', default: true },
       ],
     };
   },
