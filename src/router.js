@@ -10,6 +10,7 @@ import ExerciseEditShortlisting from '@/views/Exercises/Edit/Shortlisting';
 import ExerciseEditTimeline from '@/views/Exercises/Edit/Timeline';
 import ExerciseEditEligibility from '@/views/Exercises/Edit/Eligibility';
 import ExerciseEditSummary from '@/views/Exercises/Edit/Summary';
+import ExerciseEditConfiguration from '@/views/Exercises/Edit/Configuration';
 import ExerciseEditVacancy from '@/views/Exercises/Edit/Vacancy';
 import ExerciseEditName from '@/views/Exercises/Edit/EditName';
 import ExerciseEditAssessmentOptions from '@/views/Exercises/Edit/AssessmentOptions';
@@ -221,6 +222,15 @@ const router = new Router({
           meta: {
             requiresAuth: true,
             title: 'Exercise Details | Vacancy summary',
+          },
+        },
+        {
+          path: 'configuration',
+          component: ExerciseEditConfiguration,
+          name: 'exercise-edit-configuration',
+          meta: {
+            requiresAuth: true,
+            title: 'Exercise Details | Vacancy Configuration',
           },
         },
         {

@@ -128,6 +128,10 @@ export default {
           name: 'exercise-show-vacancy',
         },
         {
+          title: 'Vacancy configuration',
+          name: 'exercise-edit-configuration',
+        },
+        {
           title: 'Contacts',
           name: 'exercise-show-contacts',
         },

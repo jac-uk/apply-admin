@@ -237,6 +237,7 @@ export default {
         if (this.exerciseProgress) {
           data.push({ title: 'Website listing', id: 'exercise-edit-summary', done: this.exerciseProgress.vacancySummary, approved: this.approvalProgress['vacancySummary'] });
           data.push({ title: 'Vacancy information', id: 'exercise-edit-vacancy', done: this.exerciseProgress.vacancyInformation, approved: this.approvalProgress['vacancyInformation'] });
+          data.push({ title: 'Vacancy Configuration', id: 'exercise-edit-configuration', done: this.exerciseProgress.vacancyConfiguration, approved: this.approvalProgress['vacancyConfiguration'] });
           data.push({ title: 'Contacts', id: 'exercise-edit-contacts', done: this.exerciseProgress.contacts, approved: this.approvalProgress['contacts'] });
           data.push({ title: 'Timeline', id: 'exercise-edit-timeline', done: this.exerciseProgress.timeline, approved: this.approvalProgress['timeline'] });
           data.push({ title: 'Shortlisting', id: 'exercise-edit-shortlisting', done: this.exerciseProgress.shortlisting, approved: this.approvalProgress['shortlisting'] });
