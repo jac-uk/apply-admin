@@ -43,6 +43,7 @@
     "xlsx-populate": "^1.21.0"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-optional-chaining": "^7.14.2",
     "@vue/cli-plugin-babel": "^3.12.1",
     "@vue/cli-plugin-eslint": "^4.5.10",
     "@vue/cli-plugin-unit-jest": "^4.5.10",
@@ -58,7 +59,9 @@
     "firebase": "^7.24.0",
     "firebase-mock": "^2.3.2",
     "firebase-tools": "^7.16.2",
+    "install": "^0.13.0",
     "jest-extended": "^0.11.5",
+    "npm": "^7.13.0",
     "sass": "^1.32.5",
     "sass-loader": "^7.3.1",
     "utf-8-validate": "^5.0.4",

@@ -15,6 +15,7 @@
           :key="index"
         >
           <CheckboxGroup
+            v-if="isEditable"
             id="`task-group-${index}`"
             :key="index"
             v-model="exercise.configuration.taskGroupSelected"
@@ -29,13 +30,28 @@
               :label="task.title"
             />
           </CheckboxGroup>
+          <div v-else>
+            <h2>{{ `${index + 1}. ${taskGroup.title}` }}</h2>
+            <ul>
+              <li 
+                v-for="(task, taskIndex) in taskGroup.tasks"
+                :key="taskIndex"
+                :class="cssUnselectedClass(task.id)"
+              >
+                {{ task.title }} {{ exercise.configuration.taskGroupSelected.indexOf(task.id) !== -1 }}
+              </li>
+            </ul>
+          </div>
         </li>
       </ol>
-      <button class="govuk-button">
+      <button 
+        v-if="isEditable" 
+        class="govuk-button govuk-!-margin-right-3"
+      >
         Save
       </button>
       <button
-        class="govuk-button govuk-button--secondary govuk-!-margin-left-3"
+        class="govuk-button govuk-button--secondary"
         @click="btnGoBack"
       >
         Go back
@@ -49,6 +65,7 @@ import Form from '@jac-uk/jac-kit/draftComponents/Form/Form';
 import ErrorSummary from '@jac-uk/jac-kit/draftComponents/Form/ErrorSummary';
 import CheckboxGroup from '@jac-uk/jac-kit/draftComponents/Form/CheckboxGroup';
 import CheckboxItem from '@jac-uk/jac-kit/draftComponents/Form/CheckboxItem';
+import { mapGetters } from 'vuex';
 
 export default {
   components: {
@@ -112,7 +129,9 @@ export default {
     };
   },
   computed: {
-
+    ...mapGetters('exerciseDocument', {
+      isEditable: 'isEditable',
+    }),
   },
   methods: {
     btnGoBack() {
@@ -123,6 +142,22 @@ export default {
       await this.$store.dispatch('exerciseDocument/save', this.exercise);
       this.$router.push({ name: 'exercise-show-overview' });
     },
+    cssUnselectedClass(value) {
+      let classToReturn = 'unselected';      
+      if (this.exercise?.configuration?.taskGroupSelected?.indexOf(value) !== -1) {
+        classToReturn = '';
+      }
+      return classToReturn;
+    },
   },
 };
 </script>
+
+<style scoped>
+  ul {
+    list-style-type: none;
+  }
+  .unselected {
+    color: silver;
+  }
+</style>
