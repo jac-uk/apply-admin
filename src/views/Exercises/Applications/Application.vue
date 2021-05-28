@@ -127,7 +127,7 @@
                 Extension
                 <button
                   v-if="application.dateExtension"
-                  @click="openModal('modalRefExtension')"
+                  @click="openModal('modalExtension')"
                 >
                   Change
                 </button>
@@ -140,19 +140,20 @@
               </h2>
               <button
                 v-else
-                @click="openModal('modalRefExtension')"
+                @click="openModal('modalExtension')"
               >
                 Give Extension
               </button>
             </div>
           </div>
           <Modal
-            ref="modalRefExtension"
+            ref="modalExtension"
           >
             <component
               :is="`SubmissionExtension`"
               v-bind="{ applicationId: applicationId, userId: application.userId, dateExtension: application.dateExtension }"
-              @close="closeModal('modalRefExtension')"
+              @close="closeModal('modalExtension')"
+              @saved="savedModal('extension')"
             />
           </Modal>
         </div>
@@ -1763,12 +1764,13 @@
             </dl>
 
             <Modal
-              ref="modalRef"
+              ref="assessorModal"
             >
               <component
                 :is="`IndependentAssessorChange`"
                 v-bind="assessorDetails"
-                @close="closeModal('modalRef')"
+                @close="closeModal('assessorModal')"
+                @saved="savedModal('assessor ' + assessorDetails.AssessorNr)"
               />
             </Modal>
           </div>
@@ -1863,6 +1865,7 @@
                 v-bind="application.leadershipJudgeDetails"
                 :application-id="applicationId"
                 @close="closeModal('modalLeadershipJudgeDetails')"
+                @saved="savedModal('leadership judge')"
               />
             </Modal>
           </div>
@@ -2081,6 +2084,7 @@ import FurtherInformationSummary from '@/views/InformationReview/FurtherInformat
 import CharacterDeclarationSummary from '@/views/InformationReview/CharacterDeclarationSummary';
 import CharacterInformationSummaryV1 from './CharacterInformationSummaryV1.vue';
 import splitFullName from '@jac-uk/jac-kit/helpers/splitFullName';
+import { logEvent } from '@/helpers/logEvent';
 
 export default {
   components: {
@@ -2487,10 +2491,22 @@ export default {
       const myPersonalDetails = { ...this.application.personalDetails, ...objChanged };
       this.$store.dispatch('application/update', { data: { personalDetails: myPersonalDetails }, id: this.applicationId });
       this.$store.dispatch('candidates/savePersonalDetails', { data: objChanged, id: this.application.userId });
+
+      logEvent('info', 'Application updated (personal details)', {
+        applicationId: this.applicationId,
+        candidateName: myPersonalDetails.fullName,
+        exerciseRef: this.exercise.referenceNumber,
+      });
     },
     doFileUpload(val, field) {
       if (val) {
         this.$store.dispatch('application/update', { data: { [field]: val }, id: this.applicationId });
+
+        logEvent('info', 'Application updated (document uploaded)', {
+          applicationId: this.applicationId,
+          candidateName: this.application.personalDetails.fullName,
+          exerciseRef: this.exercise.referenceNumber,
+        });
       }
     },
     editAssessor(AssessorNr) {
@@ -2515,7 +2531,7 @@ export default {
           title: this.application.secondAssessorTitle,
         };
       }
-      this.openModal('modalRef');
+      this.openModal('assessorModal');
     },
     editLeadershipJudgeDetails() {
       this.openModal('modalLeadershipJudgeDetails');
@@ -2525,6 +2541,13 @@ export default {
     },
     closeModal(modalRef) {
       this.$refs[modalRef].closeModal();
+    },
+    savedModal(modalRef) {
+      logEvent('info',  `Application updated (${modalRef})`, {
+        applicationId: this.applicationId,
+        candidateName: this.application.personalDetails.fullName,
+        exerciseRef: this.exercise.referenceNumber,
+      });
     },
   },
 };

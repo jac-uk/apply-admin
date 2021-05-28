@@ -149,6 +149,7 @@ import createTimeline from '@jac-uk/jac-kit/helpers/Timeline/createTimeline';
 import exerciseTimeline from '@jac-uk/jac-kit/helpers/Timeline/exerciseTimeline';
 import ActionButton from '@jac-uk/jac-kit/draftComponents/ActionButton';
 import { functions } from '@/firebase';
+import { logEvent } from '@/helpers/logEvent';
 
 export default {
   components: {
@@ -274,11 +275,19 @@ export default {
     unlock() {
       this.$store.dispatch('exerciseDocument/unlock');
     },
-    publish() {
-      this.$store.dispatch('exerciseDocument/publish');
+    async publish() {
+      await this.$store.dispatch('exerciseDocument/publish');
+      logEvent('info', 'Exercise published', {
+        exerciseId: this.exerciseId,
+        exerciseRef: this.exercise.referenceNumber,
+      });
     },
-    unPublish() {
-      this.$store.dispatch('exerciseDocument/unpublish');
+    async unPublish() {
+      await this.$store.dispatch('exerciseDocument/unpublish');
+      logEvent('info', 'Exercise unpublished', {
+        exerciseId: this.exerciseId,
+        exerciseRef: this.exercise.referenceNumber,
+      });
     },
     async startProcessing() {
       await functions.httpsCallable('initialiseApplicationRecords')({ exerciseId: this.exerciseId });
