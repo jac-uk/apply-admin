@@ -40,6 +40,10 @@ export {
   isLegal,
   isNonLegal,
   isTribunal,
+  isWelshAdministrationRequired,
+  isSpeakWelshRequired,
+  isReadWriteWelshRequired,
+  isApplyingForWelshPost,
   currentState,
   applicationContentList,
   exerciseApplicationParts, // TODO review naming of applicationParts methods :)
@@ -259,6 +263,19 @@ function isNonLegal(data) {
 function isTribunal(data) {
   return data.isCourtOrTribunal === 'tribunal';
 }
+function isWelshAdministrationRequired(exercise) {
+  return exercise.welshRequirementType.includes('welsh-administration-questions');
+}
+function isSpeakWelshRequired(exercise) {
+  return exercise.welshRequirementType.includes('welsh-speaking');
+}
+function isReadWriteWelshRequired(exercise) {
+  return exercise.welshRequirementType.includes('welsh-reading-writing');
+}
+function isApplyingForWelshPost(exercise, application) {
+  return exercise.welshRequirement && application.applyingForWelshPost;
+}
+
 function currentState(data) { // default to registration
   if (data._applicationContent && data._applicationContent._currentStep) {
     if (APPLICATION_STEPS.indexOf(data._applicationContent._currentStep.step) >= 0) {
@@ -408,14 +425,14 @@ function applicationParts(data) {
     }
     return applicationParts;
   }
-  return {};
+  return applicationPartsMap(data); // default to all relevant parts
 }
 // application parts in current stage (n.b. returns registration by default)
 function currentApplicationParts(data) {
   if (data._applicationContent) {
     return data._applicationContent[currentState(data)];
   }
-  return [];
+  return applicationPartsMap(data); // default to all relevant parts
 }
 // are there application parts in current stage (not registration)
 function isMoreInformationNeeded(exercise, application) {
@@ -439,7 +456,6 @@ function isApplicationComplete(vacancy, application) {
   if (!requiredParts) return false;
   const partsToComplete = Object.keys(requiredParts).filter(part => requiredParts[part] === true);
   const incompleteParts = partsToComplete.filter(part => application.progress[part] !== true);
-  // console.log('incompleteParts', incompleteParts);
   return incompleteParts.length === 0;
 }
 
