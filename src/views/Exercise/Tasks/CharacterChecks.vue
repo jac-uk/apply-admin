@@ -3,12 +3,6 @@
     <h1 class="govuk-heading-l">
       Character checks
     </h1>
-
-    <Banner
-      :message="message"
-      :status="status"
-    />
-
     <dl
       class="govuk-summary-list"
     >
@@ -46,7 +40,7 @@
           <span
             v-if="exercise.characterChecks"
           >
-            {{ exercise.characterChecks.HMRC | toYesNo }}
+            {{ hmrcCheckRequired | toYesNo }}
           </span>
         </dd>
         <dd class="govuk-summary-list__actions">
@@ -61,49 +55,229 @@
       </div>
     </dl>
 
-    <ActionButton
-      type="primary"
-      :disabled="!selectedItems.length"
-      @click="sendRequests()"
-    >
-      Send requests
-    </ActionButton>
+    <TabsList
+      ref="tabs"
+      class="print-none"
+      :tabs="tabs"
+      :active-tab.sync="activeTab"
+    />
 
-    <Table
-      data-key="id"
-      :data="applicationRecords"
-      :columns="tableColumns"
-      multi-select
-      :selection.sync="selectedItems"
-      :page-size="50"
-      @change="getTableData"
+    <div
+      v-if="activeTab == 'notrequested'"
+      class="application-details"
     >
-      <template #row="{row}">
-        <TableCell :title="tableColumns[0].title">
-          {{ row.application.referenceNumber }}
-        </TableCell>
-        <TableCell :title="tableColumns[1].title">
-          {{ row.candidate.fullName }}
-        </TableCell>
-        <TableCell :title="tableColumns[2].title">
-          <span
-            v-if="row.characterChecks"
-          >
-            {{ row.characterChecks.status | lookup }}
-          </span>
-        </TableCell>
-      </template>
-    </Table>
+      <Banner
+        :message="message"
+        :status="status"
+      />
+
+      <Modal ref="modalRefRequests">
+        <component
+          :is="`CharacterChecksRequests`"
+          :selected-items="selectedItems"
+          :type="`request`"
+          :exercise-mailbox="exerciseMailbox"
+          :exercise-manager-name="exerciseManagerName"
+          :due-date="dueDate"
+          @close="closeModal('modalRefRequests')"
+          @setmessage="setMessage"
+          @reset="resetSelectedItems"
+        />
+      </Modal>
+
+      <ActionButton
+        type="primary"
+        :disabled="!selectedItems.length"
+        @click="openModal('modalRefRequests')"
+      >
+        Send requests
+      </ActionButton>
+
+      <Table
+        data-key="id"
+        :data="applicationRecordsCharacterChecksNotRequested"
+        :columns="tableColumns"
+        :search="['candidate.fullName']"
+        multi-select
+        :selection.sync="selectedItems"
+        :page-size="50"
+        :filters="[
+          {
+            title: 'Stage',
+            field: 'stage',
+            type: 'checkbox',
+            options: exerciseStages,
+          },
+        ]"
+        @change="getApplicationRecordsCharacterChecksNotRequested"
+      >
+        <template #row="{row}">
+          <TableCell :title="tableColumns[0].title">
+            <RouterLink
+              :to="{ name: 'exercise-application', params: { applicationId: row.id } }"
+            >
+              {{ row.application.referenceNumber }}
+            </RouterLink>
+          </TableCell>
+          <TableCell :title="tableColumns[1].title">
+            {{ row.candidate.fullName }}
+          </TableCell>
+          <TableCell :title="tableColumns[2].title">
+            {{ row.stage }}
+          </TableCell>
+          <TableCell :title="tableColumns[3].title">
+            {{ row.characterChecks.status }}
+          </TableCell>
+        </template>
+      </Table>
+      <p
+        v-if="!applicationRecordsCharacterChecksNotRequested.length"
+        class="govuk-body govuk-!-margin-top-6"
+      >
+        No applications found.
+      </p>
+    </div>
+
+    <div
+      v-if="activeTab == 'requested'"
+    >
+      <Banner
+        :message="message"
+        :status="status"
+      />
+
+      <Modal ref="modalRefRequests">
+        <component
+          :is="`CharacterChecksRequests`"
+          :selected-items="selectedItems"
+          :type="`reminder`"
+          :exercise-mailbox="exerciseMailbox"
+          :exercise-manager-name="exerciseManagerName"
+          :due-date="dueDate"
+          @close="closeModal('modalRefRequests')"
+          @setmessage="setMessage"
+          @reset="resetSelectedItems"
+        />
+      </Modal>
+
+      <ActionButton
+        type="primary"
+        :disabled="!selectedItems.length"
+        @click="openModal('modalRefRequests')"
+      >
+        Send reminders
+      </ActionButton>
+
+      <Table
+        data-key="id"
+        :data="applicationRecordsCharacterChecksRequested"
+        :columns="tableColumnsCharacterChecksRequested"
+        :search="['candidate.fullName']"
+        multi-select
+        :selection.sync="selectedItems"
+        :page-size="50"
+        :filters="[
+          {
+            title: 'Stage',
+            field: 'stage',
+            type: 'checkbox',
+            options: exerciseStages,
+          },
+        ]"
+        @change="getApplicationRecordsCharacterChecksRequested"
+      >
+        <template #row="{row}">
+          <TableCell :title="tableColumnsCharacterChecksRequested[0].title">
+            <RouterLink
+              :to="{ name: 'exercise-application', params: { applicationId: row.id } }"
+            >
+              {{ row.application.referenceNumber }}
+            </RouterLink>
+          </TableCell>
+          <TableCell :title="tableColumnsCharacterChecksRequested[1].title">
+            {{ row.candidate.fullName }}
+          </TableCell>
+          <TableCell :title="tableColumnsCharacterChecksRequested[2].title">
+            {{ row.stage }}
+          </TableCell>
+          <TableCell :title="tableColumnsCharacterChecksRequested[3].title">
+            {{ row.characterChecks.status }}
+          </TableCell>
+          <TableCell :title="tableColumnsCharacterChecksRequested[4].title">
+            {{ row.characterChecks.requestedAt | formatDate }}
+          </TableCell>
+          <TableCell :title="tableColumnsCharacterChecksRequested[5].title">
+            {{ getDate(row.characterChecks.reminderSentAt) || 'n/a' }}
+          </TableCell>
+        </template>
+      </Table>
+      <p
+        v-if="!applicationRecordsCharacterChecksRequested.length"
+        class="govuk-body govuk-!-margin-top-6"
+      >
+        No applications found.
+      </p>
+    </div>
+
+    <div
+      v-if="activeTab == 'completed'"
+    >
+      <Table
+        data-key="id"
+        :data="applicationRecordsCharacterChecksCompleted"
+        :columns="tableColumns"
+        :search="['candidate.fullName']"
+        multi-select
+        :selection.sync="selectedItems"
+        :page-size="50"
+        :filters="[
+          {
+            title: 'Stage',
+            field: 'stage',
+            type: 'checkbox',
+            options: exerciseStages,
+          },
+        ]"
+        @change="getApplicationRecordsCharacterChecksCompleted"
+      >
+        <template #row="{row}">
+          <TableCell :title="tableColumns[0].title">
+            <RouterLink
+              :to="{ name: 'exercise-application', params: { applicationId: row.id } }"
+            >
+              {{ row.application.referenceNumber }}
+            </RouterLink>
+          </TableCell>
+          <TableCell :title="tableColumns[1].title">
+            {{ row.candidate.fullName }}
+          </TableCell>
+          <TableCell :title="tableColumns[2].title">
+            {{ row.stage }}
+          </TableCell>
+          <TableCell :title="tableColumns[3].title">
+            {{ row.characterChecks.status }}
+          </TableCell>
+        </template>
+      </Table>
+      <p
+        v-if="!applicationRecordsCharacterChecksCompleted.length"
+        class="govuk-body govuk-!-margin-top-6"
+      >
+        No applications found.
+      </p>
+    </div>
   </div>
 </template>
 
 <script>
-import { functions } from '@/firebase';
-
+import TabsList from '@jac-uk/jac-kit/draftComponents/TabsList';
 import Banner from '@jac-uk/jac-kit/draftComponents/Banner';
 import ActionButton from '@jac-uk/jac-kit/draftComponents/ActionButton';
 import Table from '@jac-uk/jac-kit/components/Table/Table';
 import TableCell from '@jac-uk/jac-kit/components/Table/TableCell';
+import Modal from '@jac-uk/jac-kit/components/Modal/Modal';
+import CharacterChecksRequests from '@/components/ModalViews/CharacterChecksRequests';
+import { formatDate } from '@jac-uk/jac-kit/filters/filters';
 
 export default {
   components: {
@@ -111,16 +285,44 @@ export default {
     ActionButton,
     Table,
     TableCell,
+    TabsList,
+    Modal,
+    CharacterChecksRequests,
   },
-  data(){
+  data() {
     return {
+      tabs: [
+        {
+          ref: 'notrequested',
+          title: 'Not requested',
+        },
+        {
+          ref: 'requested',
+          title: 'Requested',
+        },
+        {
+          ref: 'completed',
+          title: 'Completed',
+        },
+      ],
+      activeTab: 'notrequested',
       message: null,
-      status: 'success',
+      status: null,
       selectedItems: [],
+      exerciseStages: ['shortlisted', 'selected', 'recommended', 'handover'],
       tableColumns: [
         { title: 'Reference number' },
         { title: 'Name', sort: 'candidate.fullName', default: true },
+        { title: 'Stage' },
         { title: 'Status' },
+      ],
+      tableColumnsCharacterChecksRequested: [
+        { title: 'Reference number' },
+        { title: 'Name', sort: 'candidate.fullName', default: true },
+        { title: 'Stage' },
+        { title: 'Status' },
+        { title: 'Date requested' },
+        { title: 'Date reminder sent' },
       ],
     };
   },
@@ -128,47 +330,94 @@ export default {
     exercise() {
       return this.$store.state.exerciseDocument.record;
     },
-    applicationRecords() {
-      return this.$store.state.stageShortlisted.records;
+    exerciseMailbox() {
+      return this.exercise.exerciseMailbox;
     },
-    totalApplicationRecords() {
-      return this.exercise.applicationRecords.shortlisted || 0;
+    exerciseManagerName() {
+      return this.exercise.emailSignatureName;
+    },
+    dueDate(){
+      const date = this.exercise.characterChecksReturnDate;
+      return formatDate(date);
+    },
+    applicationRecordsCharacterChecksRequested() {
+      return this.$store.state.characterChecks.checksRequestedRecords;
+    },
+    applicationRecordsCharacterChecksNotRequested() {
+      return this.$store.state.characterChecks.checksNotRequestedRecords;
+    },
+    applicationRecordsCharacterChecksCompleted() {
+      return this.$store.state.characterChecks.checksCompletedRecords;
+    },
+    hmrcCheckRequired() {
+      return this.exercise.characterChecks.HMRC;
+    },
+  },
+  watch: {
+    activeTab() {
+      this.resetSelectedItems();
     },
   },
   async created() {
-    if (! (this.exercise.characterChecks && typeof this.exercise.characterChecks.HMRC === 'boolean')) {
+    if (!(this.exercise.characterChecks && typeof this.exercise.characterChecks.HMRC === 'boolean')) {
       this.$router.push({ name: 'exercise-tasks-character-checks-edit' });
     }
   },
   methods: {
-    async sendRequests() {
-      try {
-        const response = await functions.httpsCallable('sendCharacterCheckRequests')({
-          items: this.selectedItems,
-        });
+    openModal(modalRef){
+      this.$refs[modalRef].openModal();
+    },
+    closeModal(modalRef) {
+      this.$refs[modalRef].closeModal();
+    },
+    setMessage(value, type, status) {
+      if (value === true) {
+        this.status = status;
+        this.message = `Sent ${type}(s) to ${this.selectedItems.length} candidate(s).`;
+      } else {
+        this.status = status;
+        this.message = `Failed to send ${type}(s).`;
+      }
+      setTimeout(() => {
+        this.message = '';
+      },20000);
 
-        if (response.result === false) {
-          this.setMessage('Failed to send requests.', 'warning');
-        } else {
-          this.setMessage(`Sent requests to ${this.selectedItems.length} candidates.`);
-        }
-      }
-      catch (error) {
-        this.setMessage('Failed to send requests.', 'warning');
-      }
     },
-    setMessage(message, status = 'success') {
-      this.status = status;
-      this.message = message;
+    getDate(value) {
+      return formatDate(value);
     },
-    getTableData(params) {
+    getApplicationRecordsCharacterChecksNotRequested(params) {
       this.$store.dispatch(
-        'stageShortlisted/bind',
+        'characterChecks/bind',
         {
           exerciseId: this.exercise.id,
+          requested: false,
           ...params,
         }
       );
+    },
+    getApplicationRecordsCharacterChecksRequested(params) {
+      this.$store.dispatch(
+        'characterChecks/bind',
+        {
+          exerciseId: this.exercise.id,
+          requested: true,
+          ...params,
+        }
+      );
+    },
+    getApplicationRecordsCharacterChecksCompleted(params) {
+      this.$store.dispatch(
+        'characterChecks/bind',
+        {
+          exerciseId: this.exercise.id,
+          completed: true,
+          ...params,
+        }
+      );
+    },
+    resetSelectedItems() {
+      this.selectedItems = [];
     },
   },
 };
